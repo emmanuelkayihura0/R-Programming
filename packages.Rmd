@@ -1,0 +1,382 @@
+============================================================
+ASSIGNMENT 1: INSTALLATION OF R PACKAGES
+============================================================
+Student Details
+Name: Emmanuel Kayihura
+Student ID: 20252MBI019
+Course: R for Data Science
+============================================================
+PURPOSE
+============================================================
+This assignment demonstrates package installation,
+loading libraries, importing data from different sources,
+and performing data management and analysis in R.
+============================================================
+1. PACKAGES FOR DATASETS AND FILES
+============================================================
+
+dataset_packages <- c( "readr", "readxl", "writexl", "haven", "dplyr" )
+
+missing_packages <- dataset_packages[ !dataset_packages %in% rownames(installed.packages()) ]
+
+if (length(missing_packages) > 0) { install.packages(missing_packages) }
+
+invisible( lapply(dataset_packages, library, character.only = TRUE) )
+
+============================================================
+1.1 CREATING A SAMPLE DATASET
+============================================================
+
+student_id <- 1:8
+
+student_name <- c( "Brian", "Sandra", "Joseph", "Alice", "Patrick", "Diane", "Michael", "Grace" )
+
+age <- c(22, 24, 27, 21, 25, 23, 28, 26)
+
+gender <- c( "Male", "Female", "Male", "Female", "Male", "Female", "Male", "Female" )
+
+department <- c( "Finance", "IT", "Economics", "Management", "IT", "Finance", "Management", "Economics" )
+
+marks <- c(75, 88, 67, 92, 81, 79, 85, 90)
+
+student_data <- data.frame( student_id, student_name, age, gender, department, marks )
+
+student_data
+
+============================================================
+1.2 IMPORTING CSV DATA
+============================================================
+
+dir.create("assignment1_data", showWarnings = FALSE)
+
+write.csv( student_data, "assignment1_data/students.csv", row.names = FALSE )
+
+csv_data <- read.csv( "assignment1_data/students.csv" )
+
+csv_data
+
+readr_data <- readr::read_csv( "assignment1_data/students.csv", show_col_types = FALSE )
+
+head(readr_data)
+
+str(readr_data)
+
+summary(readr_data)
+
+============================================================
+1.3 IMPORTING EXCEL DATA
+============================================================
+
+writexl::write_xlsx( student_data, "assignment1_data/students.xlsx" )
+
+excel_data <- readxl::read_excel( "assignment1_data/students.xlsx" )
+
+excel_data
+
+head(excel_data)
+
+names(excel_data)
+
+str(excel_data)
+
+summary(excel_data)
+
+============================================================
+1.4 IMPORTING TEXT FILES
+============================================================
+
+write.table( student_data, "assignment1_data/students.txt", row.names = FALSE, quote = FALSE )
+
+text_data <- read.table( "assignment1_data/students.txt", header = TRUE )
+
+text_data
+
+head(text_data)
+
+str(text_data)
+
+============================================================
+1.5 IMPORTING SPSS DATA
+============================================================
+
+haven::write_sav( student_data, "assignment1_data/students.sav" )
+
+spss_data <- haven::read_sav( "assignment1_data/students.sav" )
+
+spss_data
+
+head(spss_data)
+
+str(spss_data)
+
+summary(spss_data)
+
+============================================================
+1.6 IMPORTING STATA DATA
+============================================================
+
+haven::write_dta( student_data, "assignment1_data/students.dta" )
+
+stata_data <- haven::read_dta( "assignment1_data/students.dta" )
+
+stata_data
+
+head(stata_data)
+
+str(stata_data)
+
+============================================================
+1.7 IMPORTING SAS DATA
+============================================================
+
+if (file.exists("assignment1_data/students.sas7bdat")) {
+
+sas_data <- haven::read_sas( "assignment1_data/students.sas7bdat" )
+
+print(sas_data)
+
+print(head(sas_data))
+
+print(str(sas_data))
+
+} else {
+
+message( "Add a SAS .sas7bdat file to assignment1_data to demonstrate SAS import." )
+
+}
+
+============================================================
+1.8 USING BUILT-IN R DATASETS
+============================================================
+
+data()
+
+data("iris")
+
+iris_data <- iris
+
+head(iris_data)
+
+str(iris_data)
+
+summary(iris_data)
+
+data("mtcars")
+
+car_data <- mtcars
+
+head(car_data)
+
+summary(car_data)
+
+============================================================
+1.9 DATA MANAGEMENT USING DPLYR
+============================================================
+
+selected_students <- dplyr::select( student_data, student_name, department, marks )
+
+selected_students
+
+high_performers <- dplyr::filter( student_data, marks >= 80 )
+
+high_performers
+
+updated_students <- dplyr::mutate( student_data, performance = ifelse( marks >= 85, "Excellent", "Good" ) )
+
+updated_students
+
+sorted_students <- dplyr::arrange( student_data, desc(marks) )
+
+sorted_students
+
+department_summary <- student_data %>% group_by(department) %>% summarise( average_marks = mean(marks), highest_marks = max(marks), total_students = n(), .groups = "drop" )
+
+department_summary
+
+============================================================
+2. PACKAGES FOR POSTGRESQL DATABASES
+============================================================
+
+postgres_packages <- c( "DBI", "RPostgres" )
+
+missing_packages <- postgres_packages[ !postgres_packages %in% rownames(installed.packages()) ]
+
+if (length(missing_packages) > 0) { install.packages(missing_packages) }
+
+invisible( lapply(postgres_packages, library, character.only = TRUE) )
+
+============================================================
+2.1 CONNECTING TO A POSTGRESQL DATABASE
+============================================================
+Set your database credentials before running this section.
+
+database_name <- Sys.getenv("PGDATABASE") database_host <- Sys.getenv("PGHOST") database_user <- Sys.getenv("PGUSER") database_password <- Sys.getenv("PGPASSWORD")
+
+if ( nzchar(database_name) && nzchar(database_host) && nzchar(database_user) && nzchar(database_password) ) {
+
+connection <- tryCatch( DBI::dbConnect( RPostgres::Postgres(), dbname = database_name, host = database_host, port = 5432, user = database_user, password = database_password ), error = function(e) { message("Database connection failed: ", conditionMessage(e)) NULL } )
+
+if (!is.null(connection)) {
+
+DBI::dbListTables(connection)
+
+if ("students" %in% DBI::dbListTables(connection)) {
+
+  postgres_data <- DBI::dbReadTable(
+    connection,
+    "students"
+  )
+
+  print(head(postgres_data))
+
+  print(summary(postgres_data))
+
+}
+
+DBI::dbDisconnect(connection)
+
+
+}
+
+} else {
+
+message( "PostgreSQL credentials are not configured. Set PGDATABASE, PGHOST, PGUSER and PGPASSWORD to connect." )
+
+}
+
+============================================================
+3. PACKAGES FOR APPLICATION PROGRAMMING INTERFACES (APIs)
+============================================================
+
+api_packages <- c( "httr2", "jsonlite" )
+
+missing_packages <- api_packages[ !api_packages %in% rownames(installed.packages()) ]
+
+if (length(missing_packages) > 0) { install.packages(missing_packages) }
+
+invisible( lapply(api_packages, library, character.only = TRUE) )
+
+============================================================
+3.1 CONNECTING TO A PUBLIC API
+============================================================
+
+api_result <- tryCatch({
+
+response <- httr2::request( "https://api.github.com" ) |> httr2::req_timeout(15) |> httr2::req_perform()
+
+api_text <- httr2::resp_body_string(response)
+
+api_data <- jsonlite::fromJSON(api_text)
+
+print(api_data)
+
+api_data
+
+}, error = function(e) {
+
+message( "API request could not be completed: ", conditionMessage(e) )
+
+NULL
+
+})
+
+============================================================
+3.2 EXPLORING API INFORMATION
+============================================================
+
+if (!is.null(api_result)) {
+
+names(api_result)
+
+str(api_result)
+
+}
+
+============================================================
+4. PACKAGES FOR RANDOM OR SIMULATED DATA
+============================================================
+
+random_packages <- c( "randomNames", "wakefield" )
+
+missing_packages <- random_packages[ !random_packages %in% rownames(installed.packages()) ]
+
+if (length(missing_packages) > 0) { install.packages(missing_packages) }
+
+invisible( lapply(random_packages, library, character.only = TRUE) )
+
+============================================================
+4.1 GENERATING RANDOM STUDENT DATA
+============================================================
+
+set.seed(2026)
+
+random_students <- data.frame( student_id = 1:10, age = sample(18:30, 10, replace = TRUE), marks = sample(40:100, 10, replace = TRUE), attendance = sample(60:100, 10, replace = TRUE), gender = sample( c("Male", "Female"), 10, replace = TRUE ) )
+
+random_students
+
+============================================================
+4.2 GENERATING RANDOM NAMES
+============================================================
+
+random_student_names <- c( "Daniel", "Esther", "Samuel", "Olivia", "Andrew", "Beatrice", "Peter", "Martha", "Felix", "Diana" )
+
+random_students$student_name <- random_student_names
+
+random_students
+
+============================================================
+4.3 ANALYZING SIMULATED DATA
+============================================================
+
+summary(random_students)
+
+mean(random_students$marks)
+
+max(random_students$marks)
+
+min(random_students$marks)
+
+============================================================
+4.4 CREATING PERFORMANCE CATEGORIES
+============================================================
+
+random_students$performance <- ifelse( random_students$marks >= 80, "Excellent", ifelse( random_students$marks >= 60, "Good", "Needs Improvement" ) )
+
+random_students
+
+table(random_students$performance)
+
+============================================================
+5. COMPARING DIFFERENT DATA SOURCES
+============================================================
+
+head(csv_data)
+
+head(excel_data)
+
+head(text_data)
+
+head(spss_data)
+
+head(stata_data)
+
+head(random_students)
+
+============================================================
+6. DATA VISUALIZATION
+============================================================
+6.1 Bar Chart
+
+barplot( table(random_students$performance), main = "Student Performance Categories", xlab = "Performance", ylab = "Number of Students", col = "lightblue" )
+
+6.2 Histogram
+
+hist( random_students$marks, main = "Distribution of Student Marks", xlab = "Examination Marks", col = "lightgreen", border = "black" )
+
+6.3 Scatter Plot
+
+plot( random_students$age, random_students$marks, main = "Student Age and Examination Marks", xlab = "Age", ylab = "Marks", pch = 19, col = "blue" )
+
+6.4 Boxplot
+
+boxplot( marks ~ gender, data = random_students, main = "Marks Comparison by Gender", xlab = "Gender", ylab = "Marks", col = c("lightpink", "lightblue") )
